@@ -5,7 +5,7 @@ import Foundation
     import UIKit
 #endif
 
-public class SwimplyCache<T: Hashable, S: Any> {
+public final class SwimplyCache<T: Hashable, S: Any> {
     private struct Store<S: Any> {
         let value: S
         let cost: Int

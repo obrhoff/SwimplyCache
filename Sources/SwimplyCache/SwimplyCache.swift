@@ -53,22 +53,27 @@ private extension SwimplyCache {
         let queue = DispatchQueue.global(qos: .background)
         
         let cleanup = { [weak self] (_: Notification) -> Void in
-            queue.async { self?.trim() }
+            queue.async { self?.remove(.all) }
         }
         
         let pressure = { [weak self] () -> Void in
-            queue.async { self?.remove(.all) }
+            self?.remove(.all)
         }
         
         memoryPressure.setEventHandler(handler: pressure)
         memoryPressure.resume()
         
+        var notifications: [NSNotification.Name] = []
+        
         #if os(OSX)
-            center.addObserver(forName: NSWindow.didMiniaturizeNotification, object: nil, queue: nil, using: cleanup)
-            center.addObserver(forName: NSApplication.didHideNotification, object: nil, queue: nil, using: cleanup)
+            notifications += [NSWindow.didMiniaturizeNotification, NSApplication.didHideNotification]
         #elseif os(iOS) || os(tvOS)
-            center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: queue, queue: nil, using: cleanup)
+            notifications += [UIApplication.didEnterBackgroundNotification]
         #endif
+        
+        notifications.forEach({
+            center.addObserver(forName: $0, object: nil, queue: nil, using: cleanup)
+        })
     }
     
     func set(_ execute: () -> Void) {
@@ -132,17 +137,17 @@ public extension SwimplyCache {
                     while count > countLimit {
                         let remove = sorted.removeFirst()
                         let value = storage[remove]
-                        storage.removeValue(forKey: remove)
-                        costs -= value?.cost ?? 0
-                        count -= 1
+                        self.storage.removeValue(forKey: remove)
+                        self.costs -= value?.cost ?? 0
+                        self.count -= 1
                     }
                 case .byCost(let costLimit):
                     while self.costs > costLimit {
                         let remove = sorted.removeFirst()
                         let value = storage[remove]
                         
-                        storage.removeValue(forKey: remove)
-                        costs -= value?.cost ?? 0
+                        self.storage.removeValue(forKey: remove)
+                        self.costs -= value?.cost ?? 0
                         self.count -= 1
                     }
             }

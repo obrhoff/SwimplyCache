@@ -22,6 +22,20 @@ extension SwimplyCacheTests {
         XCTAssertEqual(cache.count, 10000)
     }
 
+    func testRemoveValue() {
+        cache = SwimplyCache<String, String>()
+        testValues.forEach({ cache.setValue($0, forKey: $0) })
+
+        let storedValue1 = cache.value(forKey: "Test500")
+
+        XCTAssertNotNil(storedValue1)
+
+        cache.remove(.key(key: "Test500"))
+        let storedValue2 = cache.value(forKey: "Test500")
+
+        XCTAssertNil(storedValue2)
+    }
+
     func testRemove() {
         cache = SwimplyCache<String, String>()
         let removeValues = testValues.suffix(5000)
@@ -39,6 +53,19 @@ extension SwimplyCacheTests {
 
         XCTAssertEqual(cache.count, 10000)
         cache.remove(.all)
+        XCTAssertEqual(cache.count, 0)
+    }
+
+    func testRemoveRandomized() {
+        cache = SwimplyCache<String, String>()
+        let testValues = self.testValues
+        let randomizedValues = testValues.shuffled()
+        testValues.forEach({ cache.setValue($0, forKey: $0) })
+        XCTAssertEqual(cache.count, 10000)
+
+        randomizedValues.forEach({ cache.remove(.key(key: $0)) })
+
+        XCTAssertEqual(cache.count, 0)
         XCTAssertEqual(cache.count, 0)
     }
 
@@ -69,44 +96,5 @@ extension SwimplyCacheTests {
         cache = SwimplyCache<String, String>(costLimit: 50)
         testValues.forEach({ cache.setValue($0, forKey: $0, cost: 10) })
         XCTAssertEqual(cache.costs, 50)
-    }
-
-    func testMeasureInsertsSwimply() {
-        let values = testValues.map({ $0 as NSString })
-        let swimplyCache = SwimplyCache<NSString, NSString>()
-
-        measure {
-            values.forEach({ swimplyCache.setValue($0, forKey: $0, cost: 10) })
-            values.forEach({ swimplyCache.remove(.key(key: $0)) })
-        }
-    }
-
-    func testMeasureInsertsNSCache() {
-        let values = testValues.map({ $0 as NSString })
-        let nsCache = NSCache<NSString, NSString>()
-
-        measure {
-            values.forEach({ nsCache.setObject($0, forKey: $0, cost: 10) })
-            values.forEach({ nsCache.removeObject(forKey: $0) })
-        }
-    }
-
-    func testMeasureLimitCostsSwimply() {
-        let values = testValues.map({ $0 as NSString })
-        let swimplyCache = SwimplyCache<NSString, NSString>(costLimit: 5000 * 10)
-
-        measure {
-            values.forEach({ swimplyCache.setValue($0, forKey: $0, cost: 10) })
-        }
-    }
-
-    func testMeasureLimitCostsNSCache() {
-        let values = testValues.map({ $0 as NSString })
-        let nsCache = NSCache<NSString, NSString>()
-        nsCache.totalCostLimit = 5000 * 10
-
-        measure {
-            values.forEach({ nsCache.setObject($0, forKey: $0, cost: 10) })
-        }
     }
 }

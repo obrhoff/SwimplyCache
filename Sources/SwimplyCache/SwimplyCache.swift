@@ -6,9 +6,19 @@ import Foundation
 #endif
 
 public final class SwimplyCache<T: Hashable, S: Any> {
-    private struct Store<S: Any> {
+    private struct Store<T: Hashable, S: Any> {
         let value: S
         let cost: Int
+        var prev: T?
+        var next: T?
+        
+        mutating func setPrev(_ prev: T?) {
+            self.prev = prev
+        }
+        
+        mutating func setNext(_ next: T?) {
+            self.next = next
+        }
     }
     
     public enum RemoveOperation {
@@ -19,9 +29,10 @@ public final class SwimplyCache<T: Hashable, S: Any> {
     }
     
     private let memoryPressure: DispatchSourceMemoryPressure
-    private var storage: [T: Store<S>]
-    private var sorted: [T]
+    private var storage: [T: Store<T, S>]
     private var lock: os_unfair_lock_s
+    private var rootKey: T?
+    private var endKey: T?
     
     public private(set) var costs: Int
     public private(set) var count: Int
@@ -33,7 +44,6 @@ public final class SwimplyCache<T: Hashable, S: Any> {
         self.lock = os_unfair_lock_s()
         self.memoryPressure = DispatchSource.makeMemoryPressureSource(eventMask: .all, queue: .global(qos: .background))
         self.storage = [:]
-        self.sorted = []
         self.countLimit = countLimit
         self.costLimit = costLimit
         self.costs = 0
@@ -76,12 +86,39 @@ private extension SwimplyCache {
         })
     }
     
+    func removeKey(_ key: T) {
+        guard let removeValue = self.storage[key] else {
+            return
+        }
+        
+        if key == rootKey, let nextKey = self.storage[key]?.next, var nextRoot = self.storage[nextKey] {
+            nextRoot.setPrev(nil)
+            rootKey = nextKey
+            storage[nextKey] = nextRoot
+        }
+        
+        if key == endKey {
+            endKey = removeValue.prev
+        }
+        
+        if let prevKey = removeValue.prev, var prevValue = self.storage[prevKey] {
+            prevValue.setNext(removeValue.next)
+            storage[prevKey] = prevValue
+        }
+        
+        if let nextKey = removeValue.next, var nextValue = self.storage[nextKey] {
+            nextValue.setPrev(removeValue.prev)
+            storage[nextKey] = nextValue
+        }
+        
+        storage.removeValue(forKey: key)
+        costs -= removeValue.cost
+        count -= 1
+    }
+    
     func set(_ execute: () -> Void) {
         os_unfair_lock_lock(&lock)
         defer { os_unfair_lock_unlock(&lock) }
-        /*
-         objc_sync_enter(self)
-         defer { objc_sync_exit(self) } */
         execute()
     }
 }
@@ -107,8 +144,17 @@ public extension SwimplyCache {
     
     func setValue(_ val: S, forKey key: T, cost: Int = 0) {
         set {
-            self.storage[key] = Store(value: val, cost: cost)
-            self.sorted.append(key)
+            if rootKey == nil {
+                rootKey = key
+            }
+            
+            if let endKey = self.endKey, var endValue = self.storage[endKey] {
+                endValue.setNext(key)
+                self.storage[endKey] = endValue
+            }
+            
+            self.storage[key] = Store(value: val, cost: cost, prev: endKey, next: nil)
+            self.endKey = key
             self.costs += cost
             self.count += 1
         }
@@ -120,35 +166,27 @@ public extension SwimplyCache {
             switch operation {
                 case .all:
                     self.storage.removeAll()
-                    self.sorted.removeAll()
+                    self.endKey = nil
+                    self.rootKey = nil
                     self.costs = 0
                     self.count = 0
                     
                 case .key(let key):
-                    guard let removeValue = self.storage[key],
-                        let removeIndex = self.sorted.firstIndex(of: key) else { return }
-                    self.storage.removeValue(forKey: key)
-                    self.sorted.remove(at: removeIndex)
-                    self.costs -= removeValue.cost
-                    self.count -= 1
+                    removeKey(key)
                     
                 case .byLimit(let countLimit):
                     guard count > countLimit else { return }
+                    
                     while count > countLimit {
-                        let remove = sorted.removeFirst()
-                        let value = storage[remove]
-                        self.storage.removeValue(forKey: remove)
-                        self.costs -= value?.cost ?? 0
-                        self.count -= 1
+                        guard let nextKey = rootKey else { break }
+                        removeKey(nextKey)
                     }
                 case .byCost(let costLimit):
-                    while self.costs > costLimit {
-                        let remove = sorted.removeFirst()
-                        let value = storage[remove]
-                        
-                        self.storage.removeValue(forKey: remove)
-                        self.costs -= value?.cost ?? 0
-                        self.count -= 1
+                    guard costs > costLimit else { return }
+                    
+                    while costs > costLimit {
+                        guard let nextKey = rootKey else { break }
+                        removeKey(nextKey)
                     }
             }
         }

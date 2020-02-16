@@ -4,49 +4,32 @@ import XCTest
 
 final class SwimplyCacheMeasureTests: XCTestCase {
     var testValues: [String] {
-        return (0..<10000).map({ "Test\($0)" })
+        return (0..<35000).map({ "Test\($0)" })
     }
 }
 
 extension SwimplyCacheMeasureTests {
-    func testMeasureSwimplyRemoveKey() {
+    func testMeasureInsertsRemovalSwimply() {
         let values = testValues.map({ $0 as NSString })
-        let swimplyCache = SwimplyCache<NSString, NSString>()
-        values.forEach({ swimplyCache.setValue($0, forKey: $0, cost: 10) })
-
-        measure {
-            swimplyCache.remove(.key(key: "Test5000"))
-        }
-    }
-
-    func testMeasureNSCacheRemoveKey() {
-        let values = testValues.map({ $0 as NSString })
-        let nsCache = NSCache<NSString, NSString>()
-
-        values.forEach({ nsCache.setObject($0, forKey: $0, cost: 10) })
-
-        measure {
-            nsCache.removeObject(forKey: "Test5000")
-        }
-    }
-
-    func testMeasureInsertsSwimply() {
-        let values = testValues.map({ $0 as NSString })
+        let insertsValues = values.shuffled()
+        let removeValues = values.shuffled()
         let swimplyCache = SwimplyCache<NSString, NSString>()
 
         measure {
-            values.forEach({ swimplyCache.setValue($0, forKey: $0, cost: 10) })
-            values.forEach({ swimplyCache.remove(.key(key: $0)) })
+            insertsValues.forEach({ swimplyCache.setValue($0, forKey: $0, cost: 10) })
+            removeValues.forEach({ swimplyCache.remove(.key(key: $0)) })
         }
     }
 
-    func testMeasureInsertsNSCache() {
+    func testMeasureInsertsRemovalNSCache() {
         let values = testValues.map({ $0 as NSString })
+        let insertsValues = values.shuffled()
+        let removeValues = values.shuffled()
         let nsCache = NSCache<NSString, NSString>()
 
         measure {
-            values.forEach({ nsCache.setObject($0, forKey: $0, cost: 10) })
-            values.forEach({ nsCache.removeObject(forKey: $0) })
+            insertsValues.forEach({ nsCache.setObject($0, forKey: $0, cost: 10) })
+            removeValues.forEach({ nsCache.removeObject(forKey: $0) })
         }
     }
 

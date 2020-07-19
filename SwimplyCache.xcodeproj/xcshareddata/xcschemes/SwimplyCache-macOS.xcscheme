@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7937244723F41F7A00E3BC6F"
-               BuildableName = "SwimplyCache-macOS.framework"
+               BuildableName = "SwimplyCache.framework"
                BlueprintName = "SwimplyCache-macOS"
                ReferencedContainer = "container:SwimplyCache.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7937244723F41F7A00E3BC6F"
-            BuildableName = "SwimplyCache-macOS.framework"
+            BuildableName = "SwimplyCache.framework"
             BlueprintName = "SwimplyCache-macOS"
             ReferencedContainer = "container:SwimplyCache.xcodeproj">
          </BuildableReference>

@@ -11,7 +11,7 @@ final class SwimplyCacheTests: XCTestCase {
     var cache: SwimplyCache<String, String>!
 
     var testValues: [TestValue] {
-        return (0..<10000).map({ TestValue(key: "Key-\($0)", value: "Value-\($0)") })
+        return (0 ..< 10000).map { TestValue(key: "Key-\($0)", value: "Value-\($0)") }
     }
 
     override func tearDown() {
@@ -48,7 +48,7 @@ extension SwimplyCacheTests {
 
     func testRemoveAll() {
         cache = SwimplyCache<String, String>()
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key) }
 
         XCTAssertEqual(cache.itemsCount, 10000)
         cache.remove(.all)
@@ -63,10 +63,10 @@ extension SwimplyCacheTests {
         let testValues = self.testValues
         let randomizedValues = testValues.shuffled()
 
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key) }
         XCTAssertEqual(cache.itemsCount, 10000)
 
-        randomizedValues.forEach({ cache.remove(.key(key: $0.key)) })
+        randomizedValues.forEach { cache.remove(.key(key: $0.key)) }
 
         XCTAssertEqual(cache.itemsCount, 0)
         XCTAssertEqual(cache.totalCosts, 0)
@@ -74,7 +74,7 @@ extension SwimplyCacheTests {
 
     func testRemoveCount() {
         cache = SwimplyCache<String, String>()
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key) }
 
         cache.remove(.byLimit(countLimit: 20))
         XCTAssertEqual(cache.itemsCount, 20)
@@ -82,7 +82,7 @@ extension SwimplyCacheTests {
 
     func testRemoveCosts() {
         cache = SwimplyCache<String, String>()
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key, cost: 10) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key, cost: 10) }
 
         XCTAssertEqual(cache.totalCosts, 10000 * 10)
         cache.remove(.byCost(costLimit: 50))
@@ -91,7 +91,7 @@ extension SwimplyCacheTests {
 
     func testLruCache() {
         cache = SwimplyCache<String, String>()
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key, cost: 10) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key, cost: 10) }
 
         let lruValue = testValues.first!
         cache.setValue(lruValue.value, forKey: lruValue.key)
@@ -105,13 +105,13 @@ extension SwimplyCacheTests {
 
     func testKeepCount() {
         cache = SwimplyCache<String, String>(countLimit: 50)
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key) }
         XCTAssertEqual(cache.itemsCount, 50)
     }
 
     func testKeepCosts() {
         cache = SwimplyCache<String, String>(costLimit: 50)
-        testValues.forEach({ cache.setValue($0.value, forKey: $0.key, cost: 10) })
+        testValues.forEach { cache.setValue($0.value, forKey: $0.key, cost: 10) }
         XCTAssertEqual(cache.totalCosts, 50)
     }
 }

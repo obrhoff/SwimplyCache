@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7937245223F41FC100E3BC6F"
-               BuildableName = "SwimplyCache-tvOS.framework"
+               BuildableName = "SwimplyCache.framework"
                BlueprintName = "SwimplyCache-tvOS"
                ReferencedContainer = "container:SwimplyCache.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7937245223F41FC100E3BC6F"
-            BuildableName = "SwimplyCache-tvOS.framework"
+            BuildableName = "SwimplyCache.framework"
             BlueprintName = "SwimplyCache-tvOS"
             ReferencedContainer = "container:SwimplyCache.xcodeproj">
          </BuildableReference>

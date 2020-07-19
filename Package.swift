@@ -11,13 +11,18 @@ let package = Package(
     products: [
         .library(
             name: "SwimplyCache",
-            targets: ["SwimplyCache"]),
+            type: .dynamic,
+            targets: ["SwimplyCache"]
+        ),
     ],
     targets: [
         .target(
             name: "SwimplyCache",
-            dependencies: []),
+            dependencies: []
+        ),
         .testTarget(
             name: "SwimplyCacheTests",
-            dependencies: ["SwimplyCache"]),
-    ])
+            dependencies: ["SwimplyCache"]
+        ),
+    ]
+)

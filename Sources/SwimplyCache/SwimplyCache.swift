@@ -45,7 +45,7 @@ public final class SwimplyCache<T: Hashable, S: Any> {
 
     public init(countLimit: Int = .max, costLimit: Int = .max) {
         lock = os_unfair_lock_s()
-        pressure = DispatchSource.makeMemoryPressureSource(eventMask: .all, queue: .global(qos: .background))
+        pressure = DispatchSource.makeMemoryPressureSource(eventMask: [.critical, .warning], queue: .main)
         storage = [:]
         totalCosts = 0
         self.countLimit = max(0, countLimit)

@@ -11,7 +11,6 @@ let package = Package(
     products: [
         .library(
             name: "SwimplyCache",
-            type: .dynamic,
             targets: ["SwimplyCache"]
         ),
     ],
